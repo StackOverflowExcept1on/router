@@ -2,8 +2,8 @@
 pragma solidity ^0.8.25;
 
 contract Program {
-    address owner;
-    uint256 stateHash;
+    address public owner;
+    uint256 public stateHash;
 
     constructor(address _owner, uint256 _stateHash) {
         owner = _owner;
