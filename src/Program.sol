@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.25;
 
-import {Test, console} from "forge-std/Test.sol";
-
 contract Program {
     address public constant OWNER = 0x2e234DAe75C793f67A35089C9d99245E1C58470b;
     uint256 public stateHash;
