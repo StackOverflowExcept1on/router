@@ -31,6 +31,10 @@ contract Router {
         address origin, uint256 codeId, bytes32 salt, bytes initPayload, uint64 gasLimit, uint128 value
     );
 
+    event UploadedCode(uint256 codeId);
+
+    event CreatedProgram(address actorId);
+
     constructor() {
         owner = msg.sender;
     }
@@ -56,12 +60,16 @@ contract Router {
         for (uint256 i = 0; i < commitData.codeIdsArray.length; i++) {
             uint256 codeId = commitData.codeIdsArray[i];
             codeIds[codeId] = true;
+
+            emit UploadedCode(codeId);
         }
 
         for (uint256 i = 0; i < commitData.createProgramsArray.length; i++) {
             CreateProgramData calldata data = commitData.createProgramsArray[i];
-            address addr = Clones.cloneDeterministic(program, data.salt);
-            IProgram(addr).setStateHash(data.stateHash);
+            address actorId = Clones.cloneDeterministic(program, data.salt);
+            IProgram(actorId).setStateHash(data.stateHash);
+
+            emit CreatedProgram(actorId);
         }
 
         for (uint256 i = 0; i < commitData.updateProgramsArray.length; i++) {
