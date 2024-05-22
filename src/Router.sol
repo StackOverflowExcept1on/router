@@ -5,10 +5,9 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IProgram} from "./IProgram.sol";
 
 contract Router {
+    address public owner;
     address public program;
-
     mapping(uint256 => bool) public codeIds;
-    address[] public programs;
 
     struct CreateProgramData {
         bytes32 salt;
@@ -32,6 +31,10 @@ contract Router {
         address origin, uint256 codeId, bytes32 salt, bytes initPayload, uint64 gasLimit, uint128 value
     );
 
+    constructor() {
+        owner = msg.sender;
+    }
+
     function uploadCode(uint256 blobTx) external {
         emit UploadCode(tx.origin, blobTx);
     }
@@ -45,6 +48,7 @@ contract Router {
     }
 
     function setProgram(address _program) external {
+        require(msg.sender == owner, "not owner");
         program = _program;
     }
 
@@ -58,7 +62,6 @@ contract Router {
             CreateProgramData calldata data = commitData.createProgramsArray[i];
             address addr = Clones.cloneDeterministic(program, data.salt);
             IProgram(addr).setStateHash(data.stateHash);
-            programs.push(addr);
         }
 
         for (uint256 i = 0; i < commitData.updateProgramsArray.length; i++) {
