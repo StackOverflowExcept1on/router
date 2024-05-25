@@ -16,11 +16,11 @@ contract RouterTest is Test {
     }
 
     function test_X() public {
-        uint256[] memory codeIdsArray = new uint256[](0);
+        bytes32[] memory codeIdsArray = new bytes32[](0);
 
         Router.CreateProgramData[] memory createProgramsArray = new Router.CreateProgramData[](1);
-        createProgramsArray[0].salt = bytes32(uint256(41));
-        createProgramsArray[0].stateHash = 42;
+        createProgramsArray[0].codeId = bytes32(uint256(41));
+        createProgramsArray[0].stateHash = bytes32(uint256(42));
 
         Router.UpdateProgramData[] memory updateProgramsArray = new Router.UpdateProgramData[](0);
 

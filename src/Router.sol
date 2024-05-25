@@ -7,31 +7,29 @@ import {IProgram} from "./IProgram.sol";
 contract Router {
     address public owner;
     address public program;
-    mapping(uint256 => bool) public codeIds;
+    mapping(bytes32 => bool) public codeIds;
 
     struct CreateProgramData {
-        bytes32 salt;
-        uint256 stateHash;
+        bytes32 codeId;
+        bytes32 stateHash;
     }
 
     struct UpdateProgramData {
         address program;
-        uint256 stateHash;
+        bytes32 stateHash;
     }
 
     struct CommitData {
-        uint256[] codeIdsArray;
+        bytes32[] codeIdsArray;
         CreateProgramData[] createProgramsArray;
         UpdateProgramData[] updateProgramsArray;
     }
 
-    event UploadCode(address origin, uint256 blobTx);
+    event UploadCode(address origin, bytes32 blobTx);
 
-    event CreateProgram(
-        address origin, uint256 codeId, bytes32 salt, bytes initPayload, uint64 gasLimit, uint128 value
-    );
+    event CreateProgram(address origin, bytes32 codeId, bytes initPayload, uint64 gasLimit, uint128 value);
 
-    event UploadedCode(uint256 codeId);
+    event UploadedCode(bytes32 codeId);
 
     event CreatedProgram(address actorId);
 
@@ -39,16 +37,16 @@ contract Router {
         owner = msg.sender;
     }
 
-    function uploadCode(uint256 blobTx) external {
+    function uploadCode(bytes32 blobTx) external {
         emit UploadCode(tx.origin, blobTx);
     }
 
-    function createProgram(uint256 codeId, bytes32 salt, bytes calldata initPayload, uint64 gasLimit, uint128 value)
+    function createProgram(bytes32 codeId, bytes calldata initPayload, uint64 gasLimit, uint128 value)
         external
         payable
     {
         require(codeIds[codeId], "unknown codeId");
-        emit CreateProgram(tx.origin, codeId, salt, initPayload, gasLimit, value);
+        emit CreateProgram(tx.origin, codeId, initPayload, gasLimit, value);
     }
 
     function setProgram(address _program) external {
@@ -58,7 +56,7 @@ contract Router {
 
     function commit(CommitData calldata commitData) external {
         for (uint256 i = 0; i < commitData.codeIdsArray.length; i++) {
-            uint256 codeId = commitData.codeIdsArray[i];
+            bytes32 codeId = commitData.codeIdsArray[i];
             codeIds[codeId] = true;
 
             emit UploadedCode(codeId);
@@ -66,7 +64,7 @@ contract Router {
 
         for (uint256 i = 0; i < commitData.createProgramsArray.length; i++) {
             CreateProgramData calldata data = commitData.createProgramsArray[i];
-            address actorId = Clones.cloneDeterministic(program, data.salt);
+            address actorId = Clones.cloneDeterministic(program, data.codeId);
             IProgram(actorId).setStateHash(data.stateHash);
 
             emit CreatedProgram(actorId);
