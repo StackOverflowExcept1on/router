@@ -10,6 +10,7 @@ contract Router {
     mapping(bytes32 => bool) public codeIds;
 
     struct CreateProgramData {
+        bytes32 salt;
         bytes32 codeId;
         bytes32 stateHash;
     }
@@ -27,9 +28,9 @@ contract Router {
 
     event UploadCode(address origin, bytes32 blobTx);
 
-    event CreateProgram(address origin, bytes32 codeId, bytes initPayload, uint64 gasLimit, uint128 value);
-
     event UploadedCode(bytes32 codeId);
+
+    event CreateProgram(address origin, bytes32 codeId, bytes salt, bytes initPayload, uint64 gasLimit, uint128 value);
 
     event CreatedProgram(address actorId);
 
@@ -41,12 +42,15 @@ contract Router {
         emit UploadCode(tx.origin, blobTx);
     }
 
-    function createProgram(bytes32 codeId, bytes calldata initPayload, uint64 gasLimit, uint128 value)
-        external
-        payable
-    {
+    function createProgram(
+        bytes32 codeId,
+        bytes calldata salt,
+        bytes calldata initPayload,
+        uint64 gasLimit,
+        uint128 value
+    ) external payable {
         require(codeIds[codeId], "unknown codeId");
-        emit CreateProgram(tx.origin, codeId, initPayload, gasLimit, value);
+        emit CreateProgram(tx.origin, codeId, salt, initPayload, gasLimit, value);
     }
 
     function setProgram(address _program) external {
@@ -64,7 +68,8 @@ contract Router {
 
         for (uint256 i = 0; i < commitData.createProgramsArray.length; i++) {
             CreateProgramData calldata data = commitData.createProgramsArray[i];
-            address actorId = Clones.cloneDeterministic(program, data.codeId);
+            require(codeIds[data.codeId], "unknown codeId");
+            address actorId = Clones.cloneDeterministic(program, keccak256(abi.encodePacked(data.salt, data.codeId)));
             IProgram(actorId).setStateHash(data.stateHash);
 
             emit CreatedProgram(actorId);
