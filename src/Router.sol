@@ -55,6 +55,7 @@ contract Router {
 
     function setProgram(address _program) external {
         require(msg.sender == owner, "not owner");
+        require(program == address(0), "program already set");
         program = _program;
     }
 
